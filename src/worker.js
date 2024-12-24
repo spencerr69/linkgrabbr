@@ -31,7 +31,7 @@ app.get('/test', (c) => {
 app.post('/linkgrabbr', async (c) => {
 	let { id, upc } = await c.req.json();
 	if (id == 'links.spotify') {
-		const token = await getSpotifyAccessToken();
+		const token = await getSpotifyAccessToken(c.env.SPOTIFY_CLIENT_ID, c.env.SPOTIFY_SECRET);
 		const link = await getSpotifyLink(token, upc);
 		return c.json({ link: link });
 		// await getSpotifyAccessToken()
@@ -43,7 +43,7 @@ app.post('/linkgrabbr', async (c) => {
 		// 	})
 		// 	.catch((error) => console.error(error));
 	} else if (id == 'links.tidal') {
-		const token = await getTidalAccessToken();
+		const token = await getTidalAccessToken(c.env.TIDAL_CLIENT_ID, c.env.TIDAL_SECRET);
 		const link = await getTidalLink(token, upc);
 		return c.json({ link });
 		// await getTidalAccessToken()
@@ -63,13 +63,13 @@ app.post('/linkgrabbr', async (c) => {
 
 //API Authorisation calls
 
-const getSpotifyAccessToken = async () => {
+const getSpotifyAccessToken = async (clientId, secret) => {
 	return await fetch('https://accounts.spotify.com/api/token', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/x-www-form-urlencoded',
 		},
-		body: `grant_type=client_credentials&client_id=${env.SPOTIFY_CLIENT_ID}&client_secret=${env.SPOTIFY_SECRET}`,
+		body: `grant_type=client_credentials&client_id=${clientId}&client_secret=${secret}`,
 	})
 		.then((res) => res.json())
 		.then((data) => {
@@ -78,11 +78,11 @@ const getSpotifyAccessToken = async () => {
 		});
 };
 
-const getTidalAccessToken = async () => {
+const getTidalAccessToken = async (clientId, secret) => {
 	return await fetch('https://auth.tidal.com/v1/oauth2/token', {
 		method: 'POST',
 		headers: {
-			Authorization: `Basic ${btoa(`${env.TIDAL_CLIENT_ID}:${env.TIDAL_SECRET}`)}`,
+			Authorization: `Basic ${btoa(`${clientId}:${secret}`)}`,
 			'Content-Type': 'application/x-www-form-urlencoded',
 		},
 		body: `grant_type=client_credentials`,
