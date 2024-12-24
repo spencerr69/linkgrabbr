@@ -6,3 +6,10 @@ preview_urls = false
 
 [observability]
 enabled = true
+
+[vars]
+SPOTIFY_CLIENT_ID=05d7147e20004ce082233ebb9f2597d6
+SPOTIFY_SECRET=da65aa850d5b4fd8a7f39b6cbb99fc37
+TIDAL_CLIENT_ID=9qkNDbW9CQhJcVvI
+TIDAL_SECRET=SJyoqEY1Gl0ZjXDLkvGPFafJRztdIcIfTropsUdrSlQ=
+YOUTUBE_API_KEY=AIzaSyC9VD_CtVMvarOVJU66nrChMT_ogo0WHjM
