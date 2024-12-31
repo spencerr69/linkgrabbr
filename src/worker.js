@@ -10,17 +10,7 @@
 
 import { Hono } from 'hono';
 
-const ARTIST = 'Spencer Raymond';
-
-// let process = {};
-
-// process.env = {
-// 	SPOTIFY_CLIENT_ID: '05d7147e20004ce082233ebb9f2597d6',
-// 	SPOTIFY_SECRET: 'da65aa850d5b4fd8a7f39b6cbb99fc37',
-// 	TIDAL_CLIENT_ID: '9qkNDbW9CQhJcVvI',
-// 	TIDAL_SECRET: 'SJyoqEY1Gl0ZjXDLkvGPFafJRztdIcIfTropsUdrSlQ=',
-// 	YOUTUBE_API_KEY: 'AIzaSyC9VD_CtVMvarOVJU66nrChMT_ogo0WHjM',
-// };
+const FREQ_CUTOFF = 0.5;
 
 const app = new Hono();
 
@@ -34,25 +24,10 @@ app.post('/linkgrabbr', async (c) => {
 		const token = await getSpotifyAccessToken(c.env.SPOTIFY_CLIENT_ID, c.env.SPOTIFY_SECRET);
 		const link = await getSpotifyLink(token, upc);
 		return c.json({ link: link });
-		// await getSpotifyAccessToken()
-		// 	.then((token) => {
-		// 		console.log(token);
-		// 		getSpotifyLink(token, upc).then((link) => {
-		// 			return c.json({ link: link });
-		// 		});
-		// 	})
-		// 	.catch((error) => console.error(error));
 	} else if (id == 'links.tidal') {
 		const token = await getTidalAccessToken(c.env.TIDAL_CLIENT_ID, c.env.TIDAL_SECRET);
 		const link = await getTidalLink(token, upc);
 		return c.json({ link });
-		// await getTidalAccessToken()
-		// 	.then((token) =>
-		// 		getTidalLink(token, upc).then((link) => {
-		// 			return c.json({ link });
-		// 		})
-		// 	)
-		// 	.catch((error) => console.error(error));
 	} else if (id == 'links.appleMusic') {
 		// const token = await getTidalAccessToken();
 		const link = await getAppleMusicLink(upc);
@@ -135,5 +110,33 @@ const getTidalLink = async (token, upc) => {
 		})
 		.catch((err) => console.log('failed on fetch: ', err));
 };
+
+//RHYMR
+
+app.post('/rhymr', async (c) => {
+	let { word } = await c.req.json();
+	console.log(word);
+	const rhymes = await fetch(`https://api.datamuse.com/words?sl=${word}&md=f&max=700`);
+	/*
+		rhymes type
+		[{word, score, numSyllables, tags: ["f:1"]}]
+	*/
+	const rawRhymes = await rhymes.json();
+
+	const processedRhymes = rawRhymes
+		.slice(1)
+		.map((rhyme) => {
+			return { word: rhyme.word, score: rhyme.score, syl: rhyme.numSyllables, freq: rhyme.tags[0].split(':')[1] };
+		})
+		.filter((rhyme) => rhyme.freq > FREQ_CUTOFF);
+
+	processedRhymes.sort((a, b) => a.word.localeCompare(b.word));
+
+	processedRhymes.sort((a, b) => b.score - a.score);
+	// processedRhymes.sort((a, b) => b.freq - a.freq);
+	processedRhymes.sort((a, b) => a.syl - b.syl);
+
+	return c.json(processedRhymes);
+});
 
 export default app;
